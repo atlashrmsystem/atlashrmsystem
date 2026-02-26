@@ -21,7 +21,15 @@ class EmployeeDocument extends Model
 
     public function getFileUrlAttribute(): ?string
     {
-        return $this->file_path ? asset('storage/'.$this->file_path) : null;
+        if (! $this->file_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->file_path, 'http://') || str_starts_with($this->file_path, 'https://')) {
+            return $this->file_path;
+        }
+
+        return asset('storage/'.$this->file_path);
     }
 
     public function employee(): BelongsTo

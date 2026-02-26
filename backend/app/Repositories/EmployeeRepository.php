@@ -3,10 +3,13 @@
 namespace App\Repositories;
 
 use App\Models\Employee;
+use App\Services\MediaStorageService;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EmployeeRepository
 {
+    public function __construct(private readonly MediaStorageService $mediaStorage) {}
+
     /**
      * Get paginated list of employees with relations
      */
@@ -68,7 +71,12 @@ class EmployeeRepository
     public function create(array $data): Employee
     {
         if (isset($data['photo'])) {
-            $data['photo_path'] = $data['photo']->store('employees/photos', 'public');
+            $data['photo_path'] = $this->mediaStorage->storeUploadedFile(
+                $data['photo'],
+                'employees/photos',
+                'public',
+                'image'
+            );
             unset($data['photo']);
         }
 
@@ -111,11 +119,13 @@ class EmployeeRepository
     public function update(Employee $employee, array $data): Employee
     {
         if (isset($data['photo'])) {
-            // Delete old photo if exists
-            if ($employee->photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
-            }
-            $data['photo_path'] = $data['photo']->store('employees/photos', 'public');
+            $this->mediaStorage->deleteStoredFile($employee->photo_path, 'public', 'image');
+            $data['photo_path'] = $this->mediaStorage->storeUploadedFile(
+                $data['photo'],
+                'employees/photos',
+                'public',
+                'image'
+            );
             unset($data['photo']);
         }
         $employee->update($data);

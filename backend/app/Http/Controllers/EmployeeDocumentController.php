@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class EmployeeDocumentController extends Controller
 {
+    public function __construct(private readonly MediaStorageService $mediaStorage) {}
+
     public function index(Employee $employee)
     {
         return response()->json([
@@ -24,7 +26,12 @@ class EmployeeDocumentController extends Controller
         ]);
 
         $uploadedFile = $validated['file'];
-        $path = $uploadedFile->store('employees/documents', 'public');
+        $path = $this->mediaStorage->storeUploadedFile(
+            $uploadedFile,
+            'employees/documents',
+            'public',
+            'raw'
+        );
 
         $document = $employee->documents()->create([
             'title' => $validated['title'],
@@ -52,12 +59,15 @@ class EmployeeDocumentController extends Controller
         $payload = ['title' => $validated['title']];
 
         if ($request->hasFile('file')) {
-            if ($document->file_path) {
-                Storage::disk('public')->delete($document->file_path);
-            }
+            $this->mediaStorage->deleteStoredFile($document->file_path, 'public', 'raw');
 
             $uploadedFile = $validated['file'];
-            $payload['file_path'] = $uploadedFile->store('employees/documents', 'public');
+            $payload['file_path'] = $this->mediaStorage->storeUploadedFile(
+                $uploadedFile,
+                'employees/documents',
+                'public',
+                'raw'
+            );
             $payload['mime_type'] = $uploadedFile->getClientMimeType();
             $payload['file_size'] = $uploadedFile->getSize();
         }
@@ -75,9 +85,7 @@ class EmployeeDocumentController extends Controller
     {
         $document = $employee->documents()->findOrFail($documentId);
 
-        if ($document->file_path) {
-            Storage::disk('public')->delete($document->file_path);
-        }
+        $this->mediaStorage->deleteStoredFile($document->file_path, 'public', 'raw');
 
         $document->delete();
 

@@ -17,8 +17,16 @@ localStorage.removeItem('auth_user');
 localStorage.removeItem('auth_permissions');
 
 // Global Axios configuration
-const backendPort = 8000;
-axios.defaults.baseURL = `http://${window.location.hostname}:${backendPort}/api`;
+const normalizeApiBaseUrl = (value) =>
+  (value || '').trim().replace(/\/+$/, '');
+
+const envApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const fallbackApiBaseUrl = isLocalHost
+  ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+  : `${window.location.origin}/api`;
+
+axios.defaults.baseURL = envApiBaseUrl || fallbackApiBaseUrl;
 axios.defaults.withCredentials = false;
 axios.defaults.headers.common.Accept = 'application/json';
 

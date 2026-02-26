@@ -12,6 +12,8 @@ use Illuminate\Http\UploadedFile;
 
 class LeaveService
 {
+    public function __construct(private readonly MediaStorageService $mediaStorage) {}
+
     /**
      * Submit a new leave request ensuring overlaps and balances are checked.
      */
@@ -55,7 +57,12 @@ class LeaveService
 
         $attachmentPath = $data['attachment_path'] ?? null;
         if (($data['attachment'] ?? null) instanceof UploadedFile) {
-            $attachmentPath = $data['attachment']->store('leave-attachments', 'public');
+            $attachmentPath = $this->mediaStorage->storeUploadedFile(
+                $data['attachment'],
+                'leave-attachments',
+                'public',
+                'raw'
+            );
         }
 
         // 3. Create Request
