@@ -1,13 +1,21 @@
 <?php
 
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    return response()->json([
+        'status' => 'ok',
+        'service' => config('app.name', 'atlas-api'),
+        'timestamp' => now()->toIso8601String(),
+    ]);
+})->withoutMiddleware([StartSession::class]);
 
 Route::get('/login', function () {
-    $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:5173'), '/');
+    $frontendUrl = trim((string) config('app.frontend_url', 'http://localhost:5173'));
+    if ($frontendUrl === '' || filter_var($frontendUrl, FILTER_VALIDATE_URL) === false) {
+        $frontendUrl = 'http://localhost:5173';
+    }
 
-    return redirect()->away($frontendUrl.'/login');
-})->name('login');
+    return redirect()->away(rtrim($frontendUrl, '/').'/login');
+})->withoutMiddleware([StartSession::class])->name('login');

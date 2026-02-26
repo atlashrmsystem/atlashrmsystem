@@ -45,6 +45,10 @@ services:
         value: atlas_
       - key: QUEUE_CONNECTION
         value: database
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
       - key: ATTENDANCE_REQUIRE_LOCATION
         value: "false"
       - key: CLOUDINARY_CLOUD_NAME
@@ -95,6 +99,10 @@ services:
         value: atlas_
       - key: QUEUE_CONNECTION
         value: database
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

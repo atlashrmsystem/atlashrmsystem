@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -23,22 +23,41 @@ class AuthController extends Controller
         $decaySeconds = max(1, (int) env('LOGIN_RATE_LIMIT_DECAY_SECONDS', 60));
         $throttleKey = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
 
-        if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
+        $rateLimiterAvailable = true;
+        try {
+            if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+                $seconds = RateLimiter::availableIn($throttleKey);
 
-            return response()->json([
-                'message' => "Too many login attempts. Try again in {$seconds} seconds.",
-            ], 429, ['Retry-After' => $seconds]);
+                return response()->json([
+                    'message' => "Too many login attempts. Try again in {$seconds} seconds.",
+                ], 429, ['Retry-After' => $seconds]);
+            }
+        } catch (Throwable $e) {
+            $rateLimiterAvailable = false;
+            report($e);
         }
 
-        if (! Auth::guard('web')->attempt($request->only('email', 'password'))) {
-            RateLimiter::hit($throttleKey, $decaySeconds);
+        $user = User::where('email', $request->input('email'))->first();
+        if (! $user || ! Hash::check($request->input('password'), $user->password)) {
+            if ($rateLimiterAvailable) {
+                try {
+                    RateLimiter::hit($throttleKey, $decaySeconds);
+                } catch (Throwable $e) {
+                    report($e);
+                }
+            }
 
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        RateLimiter::clear($throttleKey);
-        $user = Auth::guard('web')->user() ?? User::where('email', $request->email)->firstOrFail();
+        if ($rateLimiterAvailable) {
+            try {
+                RateLimiter::clear($throttleKey);
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json($this->buildAuthPayload($user, $token));
