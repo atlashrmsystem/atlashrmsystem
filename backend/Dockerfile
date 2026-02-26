@@ -33,11 +33,13 @@ RUN apt-get update \
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-scripts
 
 COPY . .
 
-RUN mkdir -p \
+RUN composer dump-autoload --no-dev --optimize --no-interaction \
+    && php artisan package:discover --ansi \
+    && mkdir -p \
         storage/framework/cache \
         storage/framework/sessions \
         storage/framework/views \
