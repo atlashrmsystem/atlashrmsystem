@@ -20,7 +20,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+if ((bool) config('auth.enable_self_registration', false)) {
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+}
 
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AppraisalController;

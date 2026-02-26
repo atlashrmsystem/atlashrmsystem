@@ -20,6 +20,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Self Registration
+    |--------------------------------------------------------------------------
+    |
+    | Public user registration should remain disabled for internal systems
+    | unless explicitly required.
+    |
+    */
+
+    'enable_self_registration' => env('ENABLE_SELF_REGISTRATION', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
