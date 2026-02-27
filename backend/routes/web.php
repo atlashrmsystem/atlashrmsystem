@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -9,7 +8,7 @@ Route::get('/', function () {
         'service' => config('app.name', 'atlas-api'),
         'timestamp' => now()->toIso8601String(),
     ]);
-})->withoutMiddleware([StartSession::class]);
+});
 
 Route::get('/login', function () {
     $frontendUrl = trim((string) config('app.frontend_url', 'http://localhost:5173'));
@@ -18,4 +17,4 @@ Route::get('/login', function () {
     }
 
     return redirect()->away(rtrim($frontendUrl, '/').'/login');
-})->withoutMiddleware([StartSession::class])->name('login');
+})->name('login');
