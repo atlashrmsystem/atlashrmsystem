@@ -19,9 +19,11 @@ RUN apt-get update \
         libonig-dev \
         libxml2-dev \
         libicu-dev \
+        libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         pdo_mysql \
+        pdo_pgsql \
         mbstring \
         bcmath \
         gd \
