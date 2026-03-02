@@ -19,10 +19,21 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_values(array_filter(array_map(
-        static fn ($origin) => trim($origin),
-        explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173'))
-    ))),
+    'allowed_origins' => (function (): array {
+        $configured = trim((string) env('CORS_ALLOWED_ORIGINS', ''));
+        if ($configured !== '') {
+            return array_values(array_filter(array_map(
+                static fn ($origin) => trim($origin),
+                explode(',', $configured)
+            )));
+        }
+
+        return array_values(array_filter([
+            'http://localhost:5173',
+            'http://127.0.0.1:5173',
+            trim((string) env('FRONTEND_URL', '')),
+        ]));
+    })(),
 
     'allowed_origins_patterns' => [],
 

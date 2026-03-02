@@ -60,9 +60,18 @@ class ScheduleController extends Controller
             abort(403, 'You are not assigned to this store.');
         }
 
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
+            $weekStartExpression = 'DATE_TRUNC(\'week\', "date"::timestamp)::date as week_start';
+        } elseif ($driver === 'sqlite') {
+            $weekStartExpression = 'date("date", \'-\' || ((strftime(\'%w\', "date") + 6) % 7) || \' days\') as week_start';
+        } else {
+            $weekStartExpression = 'DATE_SUB(`date`, INTERVAL WEEKDAY(`date`) DAY) as week_start';
+        }
+
         $scheduledWeekStarts = Schedule::query()
             ->where('store_id', $storeId)
-            ->selectRaw('DATE_SUB(`date`, INTERVAL WEEKDAY(`date`) DAY) as week_start')
+            ->selectRaw($weekStartExpression)
             ->distinct()
             ->orderBy('week_start')
             ->pluck('week_start')

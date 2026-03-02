@@ -35,6 +35,8 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: ENABLE_SELF_REGISTRATION
@@ -91,6 +93,8 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSLMODE
+        value: require
       - key: ENABLE_SELF_REGISTRATION
         value: "false"
       - key: SANCTUM_TOKEN_EXPIRATION

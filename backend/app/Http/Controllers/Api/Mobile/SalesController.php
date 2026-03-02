@@ -98,17 +98,29 @@ class SalesController extends Controller
 
         $driver = DB::connection()->getDriverName();
         if ($groupBy === 'week') {
-            $periodExpression = $driver === 'sqlite'
-                ? "strftime('%Y-W%W', date)"
-                : "DATE_FORMAT(date, '%x-W%v')";
+            if ($driver === 'sqlite') {
+                $periodExpression = "strftime('%Y-W%W', date)";
+            } elseif ($driver === 'pgsql') {
+                $periodExpression = "to_char(date_trunc('week', \"date\"::timestamp), 'IYYY-\"W\"IW')";
+            } else {
+                $periodExpression = "DATE_FORMAT(date, '%x-W%v')";
+            }
         } elseif ($groupBy === 'month') {
-            $periodExpression = $driver === 'sqlite'
-                ? "strftime('%Y-%m', date)"
-                : "DATE_FORMAT(date, '%Y-%m')";
+            if ($driver === 'sqlite') {
+                $periodExpression = "strftime('%Y-%m', date)";
+            } elseif ($driver === 'pgsql') {
+                $periodExpression = "to_char(\"date\", 'YYYY-MM')";
+            } else {
+                $periodExpression = "DATE_FORMAT(date, '%Y-%m')";
+            }
         } else {
-            $periodExpression = $driver === 'sqlite'
-                ? "strftime('%Y-%m-%d', date)"
-                : 'DATE(date)';
+            if ($driver === 'sqlite') {
+                $periodExpression = "strftime('%Y-%m-%d', date)";
+            } elseif ($driver === 'pgsql') {
+                $periodExpression = 'to_char("date", \'YYYY-MM-DD\')';
+            } else {
+                $periodExpression = 'DATE(date)';
+            }
         }
 
         $rows = $query
