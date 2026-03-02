@@ -58,9 +58,17 @@ class AuthController extends Controller
             }
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        try {
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json($this->buildAuthPayload($user, $token));
+            return response()->json($this->buildAuthPayload($user, $token));
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Login failed due to server configuration. Ensure migrations and seeders are applied.',
+            ], 500);
+        }
     }
 
     public function register(Request $request)
@@ -114,6 +122,21 @@ class AuthController extends Controller
 
     private function buildAuthPayload(User $user, string $token): array
     {
+        $roleNames = collect();
+        $permissions = collect();
+
+        try {
+            $roleNames = $user->getRoleNames()->values();
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        try {
+            $permissions = $user->getAllPermissions()->pluck('name')->values();
+        } catch (Throwable $e) {
+            report($e);
+        }
+
         return [
             'access_token' => $token,
             'token_type' => 'Bearer',
@@ -122,9 +145,9 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'employee_id' => $user->employee_id,
-                'role_names' => $user->getRoleNames()->values(),
+                'role_names' => $roleNames,
             ],
-            'permissions' => $user->getAllPermissions()->pluck('name')->values(),
+            'permissions' => $permissions,
         ];
     }
 }
