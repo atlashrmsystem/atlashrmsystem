@@ -22,4 +22,13 @@ php artisan storage:link >/dev/null 2>&1 || true
 # Clear stale cached config/routes/views so updated Render env values are applied.
 php artisan optimize:clear >/dev/null 2>&1 || true
 
+# Render free plan does not support pre-deploy hooks, so optionally run DB setup at boot.
+if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+  php artisan migrate --force || true
+fi
+
+if [ "${RUN_SEEDERS:-false}" = "true" ]; then
+  php artisan db:seed --force || true
+fi
+
 exec php artisan serve --host=0.0.0.0 --port="${PORT:-10000}"
