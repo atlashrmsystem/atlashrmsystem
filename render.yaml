@@ -7,7 +7,7 @@ services:
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
     healthCheckPath: /up
-    preDeployCommand: php artisan migrate --force
+    preDeployCommand: php artisan migrate --force && php artisan db:seed --force
     disk:
       name: atlas-api-storage
       mountPath: /var/www/html/storage
