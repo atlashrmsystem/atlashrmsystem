@@ -24,11 +24,13 @@ php artisan optimize:clear >/dev/null 2>&1 || true
 
 # Render free plan does not support pre-deploy hooks, so optionally run DB setup at boot.
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
-  php artisan migrate --force || true
+  echo "Running database migrations..."
+  php artisan migrate --force
 fi
 
 if [ "${RUN_SEEDERS:-false}" = "true" ]; then
-  php artisan db:seed --force || true
+  echo "Running database seeders..."
+  php artisan db:seed --force
 fi
 
 exec php artisan serve --host=0.0.0.0 --port="${PORT:-10000}"
